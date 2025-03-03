@@ -2,6 +2,8 @@
 
 
 #include "PACharacterBase.h"
+#include "PACharacterControlData.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 APACharacterBase::APACharacterBase()
@@ -9,6 +11,17 @@ APACharacterBase::APACharacterBase()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	static ConstructorHelpers::FObjectFinder<UPACharacterControlData> ShoulderDataRef(TEXT("/Script/ProjectA.PACharacterControlData'/Game/Asset/CharacterControl/PAC_Shoulder.PAC_Shoulder'"));
+	if (ShoulderDataRef.Object)
+	{
+		CharacterControlManager.Add(ECharacterControlType::Shoulder, ShoulderDataRef.Object);
+	}
+
+	static ConstructorHelpers::FObjectFinder<UPACharacterControlData> QuaterDataRef(TEXT("/Script/ProjectA.PACharacterControlData'/Game/Asset/CharacterControl/PAC_Quater.PAC_Quater'"));
+	if (QuaterDataRef.Object)
+	{
+		CharacterControlManager.Add(ECharacterControlType::Quater, QuaterDataRef.Object);
+	}
 }
 
 // Called when the game starts or when spawned
@@ -30,5 +43,16 @@ void APACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void APACharacterBase::SetCharacterControlData(const UPACharacterControlData* CharacterControlData)
+{
+	// Pawn
+	bUseControllerRotationYaw = CharacterControlData->bUseControllerRotationYaw;
+
+	// CharacterMovement
+	GetCharacterMovement()->bOrientRotationToMovement = CharacterControlData->bOrientRotationToMovement;
+	GetCharacterMovement()->bUseControllerDesiredRotation = CharacterControlData->bUseControllerDesiredRotation;
+	GetCharacterMovement()->RotationRate = CharacterControlData->RotationRate;
 }
 

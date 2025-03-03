@@ -12,6 +12,9 @@
 #include "InputAction.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/Controller.h"
+#include "GameFramework/PlayerController.h"
+#include "PACharacterControlData.h"
+#include "../PAPlayerController.h"
 
 APACharacterPlayer::APACharacterPlayer()
 {
@@ -32,6 +35,14 @@ APACharacterPlayer::APACharacterPlayer()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false; // 컨트롤러에 의해 카메라 회전하지 않음
+
+	CurrentCharacterControlType = ECharacterControlType::Quater;
+}
+
+void APACharacterPlayer::BeginPlay()
+{
+	Super::BeginPlay();
+	SetCharacterControl(CurrentCharacterControlType);
 }
 
 void APACharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -41,7 +52,7 @@ void APACharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	UEnhancedInputComponent* EnhancedPlayerInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent);
 	if (EnhancedPlayerInputComponent != nullptr)
 	{
-		APlayerController* PlayerController = Cast<APlayerController>(GetController());
+		/*APlayerController* PlayerController = Cast<APlayerController>(GetController());
 		if (PlayerController != nullptr)
 		{
 			UEnhancedInputLocalPlayerSubsystem* EnhancedSubsystem =
@@ -51,18 +62,23 @@ void APACharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			{
 				EnhancedSubsystem->AddMappingContext(IC_Character, 1);
 			}
-		}
+		}*/
 
-		EnhancedPlayerInputComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this, &APACharacterPlayer::Move);
+		EnhancedPlayerInputComponent->BindAction(IA_ShoulderLook, ETriggerEvent::Triggered, this, &APACharacterPlayer::ShoulderLook);
+		EnhancedPlayerInputComponent->BindAction(IA_ShoulderMove, ETriggerEvent::Triggered, this, &APACharacterPlayer::ShoulderMove);
+		
+		EnhancedPlayerInputComponent->BindAction(IA_QuaterMove, ETriggerEvent::Triggered, this, &APACharacterPlayer::QuaterMove);
+
+
+		EnhancedPlayerInputComponent->BindAction(IA_ChangeControlView, ETriggerEvent::Triggered, this, &APACharacterPlayer::ChangeCharacterControl);
 		EnhancedPlayerInputComponent->BindAction(IA_Jump, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedPlayerInputComponent->BindAction(IA_Jump, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-		EnhancedPlayerInputComponent->BindAction(IA_Look, ETriggerEvent::Triggered, this, &APACharacterPlayer::Look);
 		EnhancedPlayerInputComponent->BindAction(IA_Walk, ETriggerEvent::Started, this, &APACharacterPlayer::BeginWalking);
 		EnhancedPlayerInputComponent->BindAction(IA_Walk, ETriggerEvent::Completed, this, &APACharacterPlayer::StopWalking);
 	}
 }
 
-void APACharacterPlayer::Move(const FInputActionValue& Value)
+void APACharacterPlayer::ShoulderMove(const FInputActionValue& Value)
 {
 	FVector2D InputValue = Value.Get<FVector2d>();
 	if(Controller != nullptr && (InputValue.X != 0.0f || InputValue.Y != 0.0f))
@@ -77,14 +93,13 @@ void APACharacterPlayer::Move(const FInputActionValue& Value)
 
 		if (InputValue.Y != 0.0f)
 		{
-			//const FVector ForwardDirection = YawRotation.Vector();
 			const FVector ForwardDirection = UKismetMathLibrary::GetForwardVector(YawRotation);
 			AddMovementInput(ForwardDirection, InputValue.Y);
 		}
 	}
 }
 
-void APACharacterPlayer::Look(const FInputActionValue& Value)
+void APACharacterPlayer::ShoulderLook(const FInputActionValue& Value)
 {
 	FVector2D InputValue = Value.Get<FVector2d>();
 	
@@ -99,6 +114,28 @@ void APACharacterPlayer::Look(const FInputActionValue& Value)
 	}
 }
 
+void APACharacterPlayer::QuaterMove(const FInputActionValue& Value)
+{
+	FVector2D MovementVector = Value.Get<FVector2D>();
+
+	float InputSizeSquared = MovementVector.SquaredLength();
+	float MovementVectorSize = 1.0f;
+	float MovementVectorSizeSquared = MovementVector.SquaredLength();
+	if (MovementVectorSizeSquared > 1.0f)
+	{
+		MovementVector.Normalize();
+		MovementVectorSizeSquared = 1.0f;
+	}
+	else
+	{
+		MovementVectorSize = FMath::Sqrt(MovementVectorSizeSquared);
+	}
+
+	FVector MoveDirection = FVector(MovementVector.X, MovementVector.Y, 0.0f);
+	GetController()->SetControlRotation(FRotationMatrix::MakeFromX(MoveDirection).Rotator());
+	AddMovementInput(MoveDirection, MovementVectorSize);
+}
+
 void APACharacterPlayer::BeginWalking()
 {
 	GetCharacterMovement()->MaxWalkSpeed *= 0.4f;
@@ -107,4 +144,58 @@ void APACharacterPlayer::BeginWalking()
 void APACharacterPlayer::StopWalking()
 {
 	GetCharacterMovement()->MaxWalkSpeed /= 0.4f;
+}
+
+void APACharacterPlayer::ChangeCharacterControl()
+{
+	if (CurrentCharacterControlType == ECharacterControlType::Quater)
+	{
+		SetCharacterControl(ECharacterControlType::Shoulder);
+	}
+	else if (CurrentCharacterControlType == ECharacterControlType::Shoulder)
+	{
+		SetCharacterControl(ECharacterControlType::Quater);
+	}
+}
+
+void APACharacterPlayer::SetCharacterControl(ECharacterControlType NewCharacterControlType)
+{
+	if (!IsLocallyControlled())
+	{
+		return;
+	}
+
+	UPACharacterControlData* NewCharacterControl = CharacterControlManager[NewCharacterControlType];
+	check(NewCharacterControl);
+
+	SetCharacterControlData(NewCharacterControl);
+
+	APAPlayerController* PlayerController = Cast<APAPlayerController>(GetController());
+	if (PlayerController != nullptr)
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->ClearAllMappings();
+			UInputMappingContext* NewMappingContext = NewCharacterControl->InputMappingContext;
+			if (NewMappingContext)
+			{
+				Subsystem->AddMappingContext(NewMappingContext, 0);
+			}
+		}
+	}
+
+	CurrentCharacterControlType = NewCharacterControlType;
+}
+
+void APACharacterPlayer::SetCharacterControlData(const UPACharacterControlData* CharacterControlData)
+{
+	Super::SetCharacterControlData(CharacterControlData);
+
+	CameraBoom->TargetArmLength = CharacterControlData->TargetArmLength;
+	CameraBoom->SetRelativeRotation(CharacterControlData->RelativeRotation);
+	CameraBoom->bUsePawnControlRotation = CharacterControlData->bUsePawnControlRotation;
+	CameraBoom->bInheritPitch = CharacterControlData->bInheritPitch;
+	CameraBoom->bInheritYaw = CharacterControlData->bInheritYaw;
+	CameraBoom->bInheritRoll = CharacterControlData->bInheritRoll;
+	CameraBoom->bDoCollisionTest = CharacterControlData->bDoCollisionTest;
 }
