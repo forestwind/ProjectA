@@ -14,4 +14,12 @@ class PROJECTA_API APACharacterEnemy : public APACharacterBase
 {
 	GENERATED_BODY()
 	
+public:
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+public:
+	void LookAtActor(AActor* TargetActor);
+	bool CanSeeActor(const AActor* TargetActor) const;
+	bool CanSeeActorSweep(const AActor* TargetActor) const;
 };
