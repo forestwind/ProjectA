@@ -15,11 +15,32 @@ class PROJECTA_API APACharacterEnemy : public APACharacterBase
 	GENERATED_BODY()
 	
 public:
+	APACharacterEnemy();
+
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	void LookAtActor(AActor* TargetActor);
+	bool LookAtActor(AActor* TargetActor);
 	bool CanSeeActor(const AActor* TargetActor) const;
 	bool CanSeeActorSweep(const AActor* TargetActor) const;
+
+public:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = LookAt, Meta = (AllowPrivateAccess = "true"))
+	class USceneComponent* SightSource;
+
+protected:
+	bool bCanSeePlayer = false;
+	bool bPreviousCanSeePlayer = false;
+	FTimerHandle ThrowTimerHandle;
+	float ThrowingInterval = 2.0f;
+	float ThrowingDelay = 0.5f;
+
+	void ThrowDodgeball();
+
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Dodgeball)
+	TSubclassOf<class ADodgeballProjectile> DodgeballClass;
 };
