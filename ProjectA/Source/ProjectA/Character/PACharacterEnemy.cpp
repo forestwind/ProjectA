@@ -3,11 +3,12 @@
 
 #include "PACharacterEnemy.h"
 #include "Engine/World.h"
-#include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "../Projectile/DodgeballProjectile.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+#include "../DodgeballFunctionLibrary.h"
 
 APACharacterEnemy::APACharacterEnemy()
 {
@@ -47,8 +48,10 @@ bool APACharacterEnemy::LookAtActor(AActor* TargetActor)
 	{
 		return false;
 	}
-	
-	if (CanSeeActor(TargetActor))
+	const TArray<const AActor*> IgnoredActors = { this, TargetActor };
+
+	//if (UDodgeballFunctionLibrary::CanSeeActorSweep(GetWorld(), SightSource->GetComponentLocation(), TargetActor, IgnoredActors))
+	if (UDodgeballFunctionLibrary::CanSeeActor(GetWorld(), SightSource->GetComponentLocation(),TargetActor, IgnoredActors))
 	{
 		FVector Start = SightSource->GetComponentLocation();
 		FVector End = TargetActor->GetActorLocation();
@@ -62,49 +65,6 @@ bool APACharacterEnemy::LookAtActor(AActor* TargetActor)
 	return false;
 }
 
-bool APACharacterEnemy::CanSeeActor(const AActor* TargetActor) const
-{
-	if (TargetActor == nullptr)
-	{
-		return false;
-	}
-
-	FHitResult Hit;
-	FVector Start = SightSource->GetComponentLocation();
-	FVector End = TargetActor->GetActorLocation();
-
-	ECollisionChannel Channel = ECollisionChannel::ECC_GameTraceChannel1;
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-	QueryParams.AddIgnoredActor(TargetActor);
-	
-	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, Channel, QueryParams);
-
-	DrawDebugLine(GetWorld(), Start, End, FColor::Red);
-
-	return !Hit.bBlockingHit;
-}
-
-bool APACharacterEnemy::CanSeeActorSweep(const AActor* TargetActor) const
-{
-	if (TargetActor == nullptr)
-	{
-		return false;
-	}
-
-	FHitResult Hit;
-	FVector Start = GetActorLocation();
-	FVector End = TargetActor->GetActorLocation();
-
-	FQuat Rotation = FQuat::Identity;
-	ECollisionChannel Channel = ECollisionChannel::ECC_GameTraceChannel1;
-	FCollisionShape Shape = FCollisionShape::MakeBox(FVector(20.0f, 20.0f, 20.0f));
-
-	GetWorld()->SweepSingleByChannel(Hit, Start, End, Rotation, Channel, Shape);
-
-	return !Hit.bBlockingHit;
-}
-
 void APACharacterEnemy::ThrowDodgeball()
 {
 	if (DodgeballClass == nullptr)
@@ -112,9 +72,21 @@ void APACharacterEnemy::ThrowDodgeball()
 		return;
 	}
 
+	// ÀÏ¹Ý Spawn 
+	/*
 	FVector ForwardVector = GetActorForwardVector();
 	float SpawnDistance = 40.0f;
 	FVector SpawnLocation = GetActorLocation() + (ForwardVector * SpawnDistance);
 	GetWorld()->SpawnActor<ADodgeballProjectile>(DodgeballClass, SpawnLocation, GetActorRotation());
-	
+	*/
+
+	// Deferred Spawn
+	FVector ForwardVector = GetActorForwardVector();
+	float SpawnDistance = 40.0f;
+	FVector SpawnLocation = GetActorLocation() + (ForwardVector * SpawnDistance);
+	FTransform SpawnTransform = FTransform(GetActorRotation(), SpawnLocation);
+	ADodgeballProjectile* Projectile = GetWorld()->SpawnActorDeferred<ADodgeballProjectile>(DodgeballClass, SpawnTransform);
+
+	Projectile->GetProjectileMovementComponent()->InitialSpeed = 2200.0f;
+	Projectile->FinishSpawning(SpawnTransform);
 }

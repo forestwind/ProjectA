@@ -15,6 +15,7 @@
 #include "GameFramework/PlayerController.h"
 #include "PACharacterControlData.h"
 #include "../PAPlayerController.h"
+#include "../Component/HealthComponent.h"
 
 APACharacterPlayer::APACharacterPlayer()
 {
@@ -37,6 +38,8 @@ APACharacterPlayer::APACharacterPlayer()
 	FollowCamera->bUsePawnControlRotation = false; // 컨트롤러에 의해 카메라 회전하지 않음
 
 	CurrentCharacterControlType = ECharacterControlType::Quater;
+
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 }
 
 void APACharacterPlayer::BeginPlay()

@@ -3,9 +3,9 @@
 
 #include "DodgeballProjectile.h"
 #include "Components/SphereComponent.h"
-//#include "DodgeballCharacter.h"
 #include "../Character/PACharacterPlayer.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "../Component/HealthComponent.h"
 
 // Sets default values
 ADodgeballProjectile::ADodgeballProjectile()
@@ -43,9 +43,14 @@ void ADodgeballProjectile::Tick(float DeltaTime)
 
 void ADodgeballProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (Cast<APACharacterPlayer>(OtherActor) != nullptr)
-	//if (Cast<ADodgeballCharacter>(OtherActor) != nullptr)
+	APACharacterPlayer* Player = Cast<APACharacterPlayer>(OtherActor);
+	if (Player != nullptr)
 	{
+		UHealthComponent* HealthComponent = Player->FindComponentByClass<UHealthComponent>();
+		if (HealthComponent != nullptr)
+		{
+			HealthComponent->LoseHealth(Damage);
+		}
 		Destroy();
 	}
 }

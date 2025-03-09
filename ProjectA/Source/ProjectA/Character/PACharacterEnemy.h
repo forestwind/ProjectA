@@ -23,9 +23,6 @@ public:
 
 public:
 	bool LookAtActor(AActor* TargetActor);
-	bool CanSeeActor(const AActor* TargetActor) const;
-	bool CanSeeActorSweep(const AActor* TargetActor) const;
-
 public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = LookAt, Meta = (AllowPrivateAccess = "true"))

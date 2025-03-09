@@ -73,4 +73,7 @@ protected:
 	void ChangeCharacterControl();
 	void SetCharacterControl(ECharacterControlType NewCharacterControlType);
 	virtual void SetCharacterControlData(const class UPACharacterControlData* CharacterControlData) override;
+
+private:
+	class UHealthComponent* HealthComponent;
 };
