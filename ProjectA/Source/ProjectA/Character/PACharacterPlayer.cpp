@@ -16,6 +16,7 @@
 #include "PACharacterControlData.h"
 #include "../PAPlayerController.h"
 #include "../Component/HealthComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 APACharacterPlayer::APACharacterPlayer()
 {
@@ -201,4 +202,9 @@ void APACharacterPlayer::SetCharacterControlData(const UPACharacterControlData* 
 	CameraBoom->bInheritYaw = CharacterControlData->bInheritYaw;
 	CameraBoom->bInheritRoll = CharacterControlData->bInheritRoll;
 	CameraBoom->bDoCollisionTest = CharacterControlData->bDoCollisionTest;
+}
+
+void APACharacterPlayer::OnDeath_Implementation()
+{
+	UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, true);
 }

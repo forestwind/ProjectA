@@ -17,16 +17,18 @@ class PROJECTA_API APACharacterEnemy : public APACharacterBase
 public:
 	APACharacterEnemy();
 
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	bool LookAtActor(AActor* TargetActor);
-public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = LookAt, Meta = (AllowPrivateAccess = "true"))
-	class USceneComponent* SightSource;
+	class ULookAtActorComponent* LookAtActorComponent;
 
 protected:
 	bool bCanSeePlayer = false;

@@ -7,13 +7,14 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "InputActionValue.h"
+#include "../Interface/HealthInterface.h"
 #include "PACharacterPlayer.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTA_API APACharacterPlayer : public APACharacterBase
+class PROJECTA_API APACharacterPlayer : public APACharacterBase, public IHealthInterface
 {
 	GENERATED_BODY()
 	
@@ -76,4 +77,7 @@ protected:
 
 private:
 	class UHealthComponent* HealthComponent;
+
+public:
+	virtual void OnDeath_Implementation() override;
 };

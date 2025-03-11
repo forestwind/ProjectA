@@ -3,25 +3,32 @@
 
 #include "PACharacterEnemy.h"
 #include "Engine/World.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "../Projectile/DodgeballProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "../DodgeballFunctionLibrary.h"
+#include "../Component/LookAtActorComponent.h"
 
 APACharacterEnemy::APACharacterEnemy()
 {
-	SightSource = CreateDefaultSubobject<USceneComponent>(TEXT("SightSource"));
-	SightSource->SetupAttachment(RootComponent);
+	LookAtActorComponent = CreateDefaultSubobject<ULookAtActorComponent>(TEXT("LookAtActorComponent"));
+	LookAtActorComponent->SetupAttachment(RootComponent);
+}
+
+void APACharacterEnemy::BeginPlay()
+{
+	Super::BeginPlay();
+
+	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(this, 0);
+	LookAtActorComponent->SetTargetActor(PlayerCharacter);
 }
 
 void APACharacterEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(this, 0);
-	bCanSeePlayer = LookAtActor(PlayerCharacter);
+	
+	bCanSeePlayer = LookAtActorComponent->CanSeeActor();
 
 	if (bCanSeePlayer != bPreviousCanSeePlayer)
 	{
@@ -40,29 +47,6 @@ void APACharacterEnemy::Tick(float DeltaTime)
 
 
 	bPreviousCanSeePlayer = bCanSeePlayer;
-}
-
-bool APACharacterEnemy::LookAtActor(AActor* TargetActor)
-{
-	if (TargetActor == nullptr)
-	{
-		return false;
-	}
-	const TArray<const AActor*> IgnoredActors = { this, TargetActor };
-
-	//if (UDodgeballFunctionLibrary::CanSeeActorSweep(GetWorld(), SightSource->GetComponentLocation(), TargetActor, IgnoredActors))
-	if (UDodgeballFunctionLibrary::CanSeeActor(GetWorld(), SightSource->GetComponentLocation(),TargetActor, IgnoredActors))
-	{
-		FVector Start = SightSource->GetComponentLocation();
-		FVector End = TargetActor->GetActorLocation();
-
-		FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Start,End);
-		SetActorRotation(LookAtRotation);
-
-		return true;
-	}
-
-	return false;
 }
 
 void APACharacterEnemy::ThrowDodgeball()

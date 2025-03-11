@@ -2,7 +2,8 @@
 
 
 #include "HealthComponent.h"
-#include "Kismet/KismetSystemLibrary.h"
+#include "../Interface/HealthInterface.h"
+#include "GameFramework/Actor.h"
 
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
@@ -40,6 +41,10 @@ void UHealthComponent::LoseHealth(float Amount)
 	if (Health <= 0)
 	{
 		Health = 0.0f;
-		UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, true);
+		
+		if (GetOwner()->Implements<UHealthInterface>())
+		{
+			IHealthInterface::Execute_OnDeath(GetOwner());
+		}
 	}
 }
