@@ -17,6 +17,7 @@
 #include "../PAPlayerController.h"
 #include "../Component/HealthComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "../PAPlayerController.h"
 
 APACharacterPlayer::APACharacterPlayer()
 {
@@ -206,5 +207,9 @@ void APACharacterPlayer::SetCharacterControlData(const UPACharacterControlData* 
 
 void APACharacterPlayer::OnDeath_Implementation()
 {
-	UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, true);
+	APAPlayerController* PlayerController = Cast<APAPlayerController>(GetController());
+	if (PlayerController != nullptr)
+	{
+		PlayerController->ShowRestartWidget();
+	}
 }

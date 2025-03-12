@@ -14,4 +14,16 @@ class PROJECTA_API APAPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
+public:
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class URestartWidget> BP_RestartWidget;
+
+	void ShowRestartWidget();
+	void HideRestartWidget();
+
+private:
+
+	UPROPERTY()
+	class URestartWidget* RestartWidget;
 };
