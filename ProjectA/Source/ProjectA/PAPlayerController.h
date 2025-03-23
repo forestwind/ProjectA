@@ -13,7 +13,7 @@ UCLASS()
 class PROJECTA_API APAPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
+
 public:
 
 	UPROPERTY(EditDefaultsOnly)
@@ -26,4 +26,18 @@ private:
 
 	UPROPERTY()
 	class URestartWidget* RestartWidget;
+
+	UPROPERTY()
+	class UHUDWidget* HUDWidget;
+
+public:
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class UHUDWidget> BP_HUDWidget;
+
+protected:
+	virtual void BeginPlay() override;
+
+public:
+	void UpdateHealthPercent(float HealthPercent);
 };

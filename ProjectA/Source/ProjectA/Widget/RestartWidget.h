@@ -17,8 +17,10 @@ class PROJECTA_API URestartWidget : public UUserWidget
 protected:
 	
 	UFUNCTION()
-	void OnRestartButtonClicked();
+	void OnRestartClicked();
 
+	UFUNCTION()
+	void OnExitClicked();
 public:
 
 	virtual void NativeOnInitialized() override;
@@ -26,4 +28,7 @@ public:
 	//UPROPERTY(meta = (BindWidget, OptionWidget = true))
 	UPROPERTY(meta = (BindWidget))
 	class UButton* RestartButton;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* ExitButton;
 };

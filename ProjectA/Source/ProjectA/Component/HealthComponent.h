@@ -32,4 +32,5 @@ protected:
 public:
 	void LoseHealth(float Amount);
 		
+	FORCEINLINE float GetHealthPercent() const { return Health / 100.0f; }
 };

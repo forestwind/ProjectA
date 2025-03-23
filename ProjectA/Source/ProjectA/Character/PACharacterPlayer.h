@@ -54,7 +54,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	class UInputAction* IA_Jump;
 
-	
 	UPROPERTY(EditAnywhere, Category = "Input")
 	class UInputAction* IA_Walk;
 
@@ -80,4 +79,5 @@ private:
 
 public:
 	virtual void OnDeath_Implementation() override;
+	virtual void OnTakeDamage_Implementation() override;
 };

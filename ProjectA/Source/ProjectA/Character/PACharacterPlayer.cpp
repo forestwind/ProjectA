@@ -213,3 +213,12 @@ void APACharacterPlayer::OnDeath_Implementation()
 		PlayerController->ShowRestartWidget();
 	}
 }
+
+void APACharacterPlayer::OnTakeDamage_Implementation()
+{
+	APAPlayerController* PlayerController = Cast<APAPlayerController>(GetController());
+	if (PlayerController != nullptr)
+	{
+		PlayerController->UpdateHealthPercent(HealthComponent->GetHealthPercent());
+	}
+}

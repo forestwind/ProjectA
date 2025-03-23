@@ -3,6 +3,7 @@
 
 #include "PAPlayerController.h"
 #include "Widget/RestartWidget.h"
+#include "Widget/HUDWidget.h"
 
 void APAPlayerController::ShowRestartWidget()
 {
@@ -23,4 +24,23 @@ void APAPlayerController::HideRestartWidget()
 	SetPause(false);
 	SetInputMode(FInputModeGameOnly());
 	bShowMouseCursor = false;
+}
+
+void APAPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (BP_HUDWidget != nullptr)
+	{
+		HUDWidget = CreateWidget<UHUDWidget>(this, BP_HUDWidget);
+		HUDWidget->AddToViewport();
+	}
+}
+
+void APAPlayerController::UpdateHealthPercent(float HealthPercent)
+{
+	if (HUDWidget != nullptr)
+	{
+		HUDWidget->UpdateHealthPercent(HealthPercent);
+	}
 }
